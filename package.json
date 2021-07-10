@@ -1,20 +1,32 @@
 {
-  "name": "fuzz",
+  "name": "ing-fuzz-core",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "module": "dist/index.es.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "clean": "rm -rf build",
+    "build": "npm run clean && rollup -c"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^19.0.0",
+    "@rollup/plugin-node-resolve": "^13.0.0",
     "@types/jest": "^26.0.23",
     "@types/lodash": "^4.14.170",
     "axios": "^0.21.1",
     "jest": "^27.0.6",
     "lodash": "^4.17.21",
+    "rollup": "^2.53.0",
+    "rollup-plugin-peer-deps-external": "^2.2.4",
+    "rollup-plugin-typescript2": "^0.30.0",
+    "tslib": "^2.3.0",
     "typescript": "^4.3.4"
+  },
+  "dependencies": {
+    "rollup-plugin-dts": "^3.0.2"
   }
 }

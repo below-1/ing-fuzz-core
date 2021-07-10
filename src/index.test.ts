@@ -9,16 +9,16 @@ import {
   RightTrap, 
   Rule,
   ruleStrength,
-  compose} from './vars'
+  imply,
+  defuzz,
+  calcConfidence
+} from './index'
 
 describe('dummy test', () => {
 
   it('triangle function', () => {
     const triangle = Triangle(10, 20, 30)
     const result = triangle(23)
-    // console.log(result)
-    // const input: Input = [23, 5, 4, 4, 6, 5, 2, 50000]
-    // fuzzier(input)
     const expected = 0.7
     expect(result).toBeDefined()
     expect(result).toBeCloseTo(expected, 10)
@@ -103,6 +103,18 @@ describe('dummy test', () => {
     })
   })
 
+  it('ruleStrength index out of bound', () => {
+    const rule = {
+      predicate: [4, 0, 3, 2, 1, 2, 2, 1],
+      consequence: 2
+    }
+    const fuzzFunc = buildFuzzier(meta)
+    const input = [23, 5, 4, 4, 6, 5, 2, 50000]
+    expect(() => {
+      imply([ rule ], fuzzFunc(input))
+    }).toThrowError('INDEX_OUT_OF_BOUND: r=4')
+  })
+
   it('compose function', async () => {
     const input = [23, 5, 4, 4, 6, 5, 2, 50000]
     const fuzzFunc = buildFuzzier(meta)
@@ -122,10 +134,39 @@ describe('dummy test', () => {
       }
       return rule
     })
-    const result = compose(rules, fuzzVals)
-    console.log(fuzzVals)
-    console.log(rules.length)
-    console.log(result.length)
+    const result = imply(rules, fuzzVals)
+    // console.log(result)
+  })
+
+  it('defuzz function', async () => {
+    const input = [23, 5, 4, 4, 6, 5, 2, 50000]
+    const fuzzFunc = buildFuzzier(meta)
+    const fuzzVals = fuzzFunc(input)
+
+    const params = {
+      perPage: 10000
+    }
+    const resp = await axios.get('http://localhost:5000/api/rule', { params })
+    const { data } = resp
+    const rules = data.items.map((it: any) => {
+      const predicate = it.predicate.split('').map((x: string) => parseInt(x))
+      const consequence = parseInt(it.consequence)
+      const rule: Rule = {
+        predicate,
+        consequence
+      }
+      return rule
+    })
+    const ruleInfos = imply(rules, fuzzVals)
+    // console.log(ruleInfos)
+    const results = defuzz(ruleInfos)
+    console.log(results)
+    results.forEach(fuzzResult => {
+      expect(fuzzResult.confidence).toBeGreaterThan(0)
+      expect(fuzzResult.confidence).toBeLessThanOrEqual(1)
+      expect(fuzzResult.consequence).toBeLessThanOrEqual(7)
+      expect(fuzzResult.consequence).toBeGreaterThanOrEqual(0)
+    })
   })
 
 })

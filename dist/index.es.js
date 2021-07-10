@@ -1,8 +1,4 @@
-'use strict';
-
-Object.defineProperty(exports, '__esModule', { value: true });
-
-var tslib = require('tslib');
+import { __assign } from 'tslib';
 
 var CONS = [0, 1, 2, 3, 4, 5, 6];
 function Triangle(a, b, c) {
@@ -185,7 +181,7 @@ function imply(rules, input) {
     });
     rules.forEach(function (r) {
         var strength = ruleStrength(r.predicate, input);
-        var ruleInfo = tslib.__assign(tslib.__assign({}, r), { strength: strength });
+        var ruleInfo = __assign(__assign({}, r), { strength: strength });
         if (!isFinite(strength)) {
             return;
         }
@@ -217,17 +213,5 @@ function defuzz(ruleInfos) {
     return ruleInfos.map(function (ruleInfo) { return calcConfidence(ruleInfo, maxStrength); });
 }
 
-exports.ConsLeftTrap = ConsLeftTrap;
-exports.ConsTriangle = ConsTriangle;
-exports.ConstRightTrap = ConstRightTrap;
-exports.LeftTrap = LeftTrap;
-exports.RightTrap = RightTrap;
-exports.Triangle = Triangle;
-exports.buildFuzzier = buildFuzzier;
-exports.calcConfidence = calcConfidence;
-exports.consMeta = consMeta;
-exports.defuzz = defuzz;
-exports.imply = imply;
-exports.meta = meta;
-exports.ruleStrength = ruleStrength;
-//# sourceMappingURL=index.js.map
+export { ConsLeftTrap, ConsTriangle, ConstRightTrap, LeftTrap, RightTrap, Triangle, buildFuzzier, calcConfidence, consMeta, defuzz, imply, meta, ruleStrength };
+//# sourceMappingURL=index.es.js.map

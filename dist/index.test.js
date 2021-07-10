@@ -41,27 +41,24 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var axios_1 = __importDefault(require("axios"));
 var lodash_1 = require("lodash");
-var vars_1 = require("./vars");
+var index_1 = require("./index");
 describe('dummy test', function () {
     it('triangle function', function () {
-        var triangle = vars_1.Triangle(10, 20, 30);
+        var triangle = index_1.Triangle(10, 20, 30);
         var result = triangle(23);
-        // console.log(result)
-        // const input: Input = [23, 5, 4, 4, 6, 5, 2, 50000]
-        // fuzzier(input)
         var expected = 0.7;
         expect(result).toBeDefined();
         expect(result).toBeCloseTo(expected, 10);
     });
     it('left trap function', function () {
-        var leftTrap = vars_1.LeftTrap(1, 5);
+        var leftTrap = index_1.LeftTrap(1, 5);
         var result = leftTrap(4);
         var expected = 0.25;
         expect(result).toBeDefined();
         expect(result).toBeCloseTo(expected, 10);
     });
     it('right trap function', function () {
-        var rightTrap = vars_1.RightTrap(25, 35);
+        var rightTrap = index_1.RightTrap(25, 35);
         var result = rightTrap(30);
         var expected = 0.5;
         expect(result).toBeDefined();
@@ -69,7 +66,7 @@ describe('dummy test', function () {
     });
     it('fuzzier function known input', function () {
         var input = [23, 5, 4, 4, 6, 5, 2, 50000];
-        var fuzzFunc = vars_1.buildFuzzier(vars_1.meta);
+        var fuzzFunc = index_1.buildFuzzier(index_1.meta);
         var result = fuzzFunc(input);
         expect(result).toBeDefined();
         result.forEach(function (_var) {
@@ -94,7 +91,7 @@ describe('dummy test', function () {
             ];
         });
         xs.forEach(function (input) {
-            var fuzzFunc = vars_1.buildFuzzier(vars_1.meta);
+            var fuzzFunc = index_1.buildFuzzier(index_1.meta);
             var result = fuzzFunc(input);
             expect(result).toBeDefined();
             result.forEach(function (_var) {
@@ -120,11 +117,22 @@ describe('dummy test', function () {
         var input = [23, 5, 4, 4, 6, 5, 2, 50000];
         rules.forEach(function (rule, index) {
             var expected = expecteds[index];
-            var fuzzFunc = vars_1.buildFuzzier(vars_1.meta);
+            var fuzzFunc = index_1.buildFuzzier(index_1.meta);
             var fuzzVals = fuzzFunc(input);
-            var result = vars_1.ruleStrength(rule.predicate, fuzzVals);
+            var result = index_1.ruleStrength(rule.predicate, fuzzVals);
             expect(result).toBeCloseTo(expected, 10);
         });
+    });
+    it('ruleStrength index out of bound', function () {
+        var rule = {
+            predicate: [4, 0, 3, 2, 1, 2, 2, 1],
+            consequence: 2
+        };
+        var fuzzFunc = index_1.buildFuzzier(index_1.meta);
+        var input = [23, 5, 4, 4, 6, 5, 2, 50000];
+        expect(function () {
+            index_1.imply([rule], fuzzFunc(input));
+        }).toThrowError('INDEX_OUT_OF_BOUND: r=4');
     });
     it('compose function', function () { return __awaiter(void 0, void 0, void 0, function () {
         var input, fuzzFunc, fuzzVals, params, resp, data, rules, result;
@@ -132,7 +140,7 @@ describe('dummy test', function () {
             switch (_a.label) {
                 case 0:
                     input = [23, 5, 4, 4, 6, 5, 2, 50000];
-                    fuzzFunc = vars_1.buildFuzzier(vars_1.meta);
+                    fuzzFunc = index_1.buildFuzzier(index_1.meta);
                     fuzzVals = fuzzFunc(input);
                     params = {
                         perPage: 10000
@@ -150,10 +158,44 @@ describe('dummy test', function () {
                         };
                         return rule;
                     });
-                    result = vars_1.compose(rules, fuzzVals);
-                    console.log(fuzzVals);
-                    console.log(rules.length);
-                    console.log(result.length);
+                    result = index_1.imply(rules, fuzzVals);
+                    return [2 /*return*/];
+            }
+        });
+    }); });
+    it('defuzz function', function () { return __awaiter(void 0, void 0, void 0, function () {
+        var input, fuzzFunc, fuzzVals, params, resp, data, rules, ruleInfos, results;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    input = [23, 5, 4, 4, 6, 5, 2, 50000];
+                    fuzzFunc = index_1.buildFuzzier(index_1.meta);
+                    fuzzVals = fuzzFunc(input);
+                    params = {
+                        perPage: 10000
+                    };
+                    return [4 /*yield*/, axios_1.default.get('http://localhost:5000/api/rule', { params: params })];
+                case 1:
+                    resp = _a.sent();
+                    data = resp.data;
+                    rules = data.items.map(function (it) {
+                        var predicate = it.predicate.split('').map(function (x) { return parseInt(x); });
+                        var consequence = parseInt(it.consequence);
+                        var rule = {
+                            predicate: predicate,
+                            consequence: consequence
+                        };
+                        return rule;
+                    });
+                    ruleInfos = index_1.imply(rules, fuzzVals);
+                    results = index_1.defuzz(ruleInfos);
+                    console.log(results);
+                    results.forEach(function (fuzzResult) {
+                        expect(fuzzResult.confidence).toBeGreaterThan(0);
+                        expect(fuzzResult.confidence).toBeLessThanOrEqual(1);
+                        expect(fuzzResult.consequence).toBeLessThanOrEqual(7);
+                        expect(fuzzResult.consequence).toBeGreaterThanOrEqual(0);
+                    });
                     return [2 /*return*/];
             }
         });
